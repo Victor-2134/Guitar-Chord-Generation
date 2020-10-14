@@ -24,7 +24,7 @@ while true
         break
     end
     
-%     Initalise the delays for each note based on the frets and the string offsets.
+%   Initalise the delays for each note based on the frets and the string offsets.
     delay = [round(Fs/(A*2^((fret(i,1)+Eoffset)/12))),
     round(Fs/(A*2^(fret(i,2)/12))),
     round(Fs/(A*2^((fret(i,3)+Doffset)/12))), 
@@ -32,39 +32,56 @@ while true
     round(Fs/(A*2^((fret(i,5)+Boffset)/12))), 
     round(Fs/(A*2^((fret(i,6)+E2offset)/12)))];
 
-    b = cell(length(delay),1);              %Creates a NxM array of "double size" 
+    b = cell(length(delay),1);              % Creates a NxM array of "double size" 
     a = cell(length(delay),1);
-    H = zeros(length(delay),4096);          %Creates a NxM array of zeros
+    H = zeros(length(delay),4096);          % Creates a NxM array of zeros
     note = zeros(length(x),length(delay));
     
     for indx = 1:length(delay)
-     % Build a cell array of numerator and denominator coefficients.
-        b{indx} = firls(42, [0 1/delay(indx) 2/delay(indx) 1], [0 0 1 1]).'; % Approximate string harmonics
-        a{indx} = [1 zeros(1, delay(indx)) -0.5 -0.5].';    % FIND IT OUTTTT (it is somthing related to Frequency Domain Shaping)
+     % Build a cell array of numerator(b) and denominator(a) coefficients.
+     b{indx} = firls(42, [0 1/delay(indx) 2/delay(indx) 1], [0 0 1 1]).'; % Approximate string harmonics
+     a{indx} = [1 zeros(1, delay(indx)) -0.5 -0.5].';    % FIND IT OUTTTT (it is somthing related to Frequency Domain Shaping)
 
      % Populate the states with random numbers and filter the input zeros.
      zi = rand(max(length(b{indx}),length(a{indx}))-1,1);
 
-     %Create a 4 second note.
+     % Create a 4 second note.
+     % Filtration is done wrt inital values(zi).
      note(:, indx) = filter(b{indx}, a{indx}, x, zi); 
 
-    % Make sure that each note is centered on zero.
+    % Make sure that each note is centered on zero so that it is sutable
+    % for the audio player
      note(:, indx) = note(:, indx)-mean(note(:, indx));
-
-%      [H(indx,:),W] = freqz(b{indx}, a{indx}, F, Fs);
+     [H(indx,:),W] = freqz(b{indx}, a{indx}, F, Fs);
     end
     
+    % Combining all the frets of the chord
     combinedNote = sum(note,2);
     combinedNote = combinedNote/max(abs(combinedNote));
-    subplot(1,2,1)
-    plot(combinedNote)
-    set(gca, 'FontName','Lexend Deca','FontSize', 13, 'FontWeight', 'bold');
-    title("Abcd");
-    subplot(1,2,2)
-    set(gca, 'FontName','Lexend Deca','FontSize', 13, 'FontWeight', 'bold');
-    stem(combinedNote)
-    title("Efgh");
-    hplayer = audioplayer(combinedNote, Fs); 
+    
+    hplayer = audioplayer(combinedNote, Fs,24); % 24-> Bits per sample
     play(hplayer)
     pause(0.5)
+    
+    % Plotting the Frequency Resopnce of the chord
+    hline = plot(W,20*log10(abs(H.')));
+    switch i
+        case 1
+            title('Harmonics of A major chord');
+        case 2
+            title('Harmonics of C major chord');
+        case 3
+            title('Harmonics of D major chord');
+        case 4
+            title('Harmonics of E major chord');
+        case 5
+            title('Harmonics of F major chord');
+        case 6
+            title('Harmonics of G major chord');
+    end
+    xlabel('Frequency (Hz)');
+    ylabel('Magnitude (dB)');
+    legend(hline,'G','B','D','G','B','G2');
 end
+
+function a = FIR(
