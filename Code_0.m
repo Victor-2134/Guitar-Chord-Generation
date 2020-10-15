@@ -1,9 +1,5 @@
-% Problems:
-%     Find out what x does
-
-
 Fs       = 44100;       % Sampling Freq (44.1K is chosen to cover the entire human hearing range)
-A        = 110;         % The A string of a guitar is normally tuned to 110 Hz
+A        = 110;         % The A string of a guitar is tuned to 110 Hz
 Eoffset  = -5;          % Change in freq wrt A 
 Doffset  = 5;
 Goffset  = 10;
@@ -17,7 +13,7 @@ fret = [0 0 2 2 2 0;    % A_Major
         0 2 2 1 0 0;    % E_Major
         0 0 3 2 1 1;    % F_Major
         3 2 0 0 0 3];   % G_Major
-    
+
 while true
     i = input('Enter a chord to play(1-6) (Enter 0 to exit): '); 
     if(i == 0)
@@ -34,7 +30,7 @@ while true
 
     b = cell(length(delay),1);              % Creates a NxM array of "double size" 
     a = cell(length(delay),1);
-    H = zeros(length(delay),4096);          % Creates a NxM array of zeros
+    H = zeros(length(delay),4096);          % Creates a NxM array of zeros to store magnitude
     note = zeros(length(x),length(delay));
     
     for indx = 1:length(delay)
@@ -63,10 +59,11 @@ while true
     play(hplayer)
     pause(0.5)
     
-    % Plotting the Frequency Resopnce of the chord
+    % Plotting the Frequency Response of the chord
     hline = plot(W,20*log10(abs(H.')));
     switch i
         case 1
+            print('Playing A Major Chord');
             title('Harmonics of A major chord');
         case 2
             title('Harmonics of C major chord');
@@ -81,7 +78,5 @@ while true
     end
     xlabel('Frequency (Hz)');
     ylabel('Magnitude (dB)');
-    legend(hline,'G','B','D','G','B','G2');
+    legend(hline,'E','A','D','G','B','E2');
 end
-
-function a = FIR(
