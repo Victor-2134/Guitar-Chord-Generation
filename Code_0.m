@@ -1,5 +1,5 @@
 Fs       = 44100;       % Sampling Freq (44.1K is chosen to cover the entire human hearing range)
-A        = 110;         % The A string of a guitar is tuned to 110 Hz
+A        = 110;         % The 'A' string of a guitar is tuned to 110 Hz
 Eoffset  = -5;          % Change in freq wrt A 
 Doffset  = 5;
 Goffset  = 10;
@@ -20,7 +20,7 @@ while true
         break
     end
     
-%   Initalise the delays for each note based on the frets and the string offsets.
+%   Initialise the delays for each note based on the frets and the string offsets.
     delay = [round(Fs/(A*2^((fret(i,1)+Eoffset)/12))),
     round(Fs/(A*2^(fret(i,2)/12))),
     round(Fs/(A*2^((fret(i,3)+Doffset)/12))), 
@@ -30,13 +30,13 @@ while true
 
     b = cell(length(delay),1);              % Creates a NxM array of "double size" 
     a = cell(length(delay),1);
-    H = zeros(length(delay),4096);          % Creates a NxM array of zeros to store magnitude
+    H = zeros(length(delay),2^12);          % Creates a NxM array of zeros to store magnitude
     note = zeros(length(x),length(delay));
     
     for indx = 1:length(delay)
      % Build a cell array of numerator(b) and denominator(a) coefficients.
-     b{indx} = firls(42, [0 1/delay(indx) 2/delay(indx) 1], [0 0 1 1]).'; % Approximate string harmonics
-     a{indx} = [1 zeros(1, delay(indx)) -0.5 -0.5].';    % FIND IT OUTTTT (it is somthing related to Frequency Domain Shaping)
+     b{indx} = firls(50, [0 1/delay(indx) 2/delay(indx) 1], [0 0 1 1]).'; % Approximate string harmonics
+     a{indx} = [1 zeros(1, delay(indx)) -0.5 -0.5].';    % Frequency Domain Shaping
 
      % Populate the states with random numbers and filter the input zeros.
      zi = rand(max(length(b{indx}),length(a{indx}))-1,1);
@@ -53,7 +53,6 @@ while true
     
     % Combining all the frets of the chord
     combinedNote = sum(note,2);
-    combinedNote = combinedNote/max(abs(combinedNote));
     
     hplayer = audioplayer(combinedNote, Fs,24); % 24-> Bits per sample
     play(hplayer)
